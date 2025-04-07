@@ -7,11 +7,16 @@ This file creates your application.
 
 import os
 from app import app, db
-from flask import render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
+from flask_wtf.csrf import generate_csrf
 from werkzeug.utils import secure_filename
 from app.models import Movie
 from app.forms import MovieForm
 
+app = Flask(__name__)
+
+UPLOAD_FOLDER = os.path.join(app.root_path, '..', 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 ###
 # Routing for your application.
@@ -21,7 +26,7 @@ from app.forms import MovieForm
 def index():
     return jsonify(message="This is the beginning of our API")
 
-@app.route('/api/v1/movies', method='POST')
+@app.route('/api/v1/movies', methods=['POST'])
 def movies():
     form = MovieForm()
     
@@ -57,6 +62,32 @@ def movies():
     else:
         return jsonify({"errors": form_errors(form)}), 400
 
+@app.route('/api/v1/movies', methods=['GET'])
+def get_movies():
+    # Query the database for all movies
+    movies = Movie.query.all()  # Fetch all movie records
+
+    # Create a list to hold movie data in dictionary form
+    movies_list = []
+    
+    for movie in movies:
+        movies_list.append({
+            'id': movie.id,
+            'title': movie.title,
+            'description': movie.description,
+            'poster': movie.poster,
+            'created_at': movie.created_at.isoformat()  # Format datetime to ISO string
+        })
+
+    # Return the movie list in JSON format
+    return jsonify(movies_list)
+
+@app.route('/api/v1/posters/<filename>', methods=['GET'])
+def get_poster(filename):
+    try:
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    except FileNotFoundError:
+        return jsonify({"error": "File not found"}), 404
 
 ###
 # The functions below should be applicable to all Flask apps.
@@ -83,6 +114,9 @@ def send_text_file(file_name):
     file_dot_text = file_name + '.txt'
     return app.send_static_file(file_dot_text)
 
+@app.route('/api/v1/csrf-token', methods=['GET'])
+def get_csrf():
+    return jsonify({'csrf_token': generate_csrf()})
 
 @app.after_request
 def add_header(response):
