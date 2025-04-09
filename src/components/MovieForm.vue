@@ -81,15 +81,12 @@ const saveMovie = async () => {
     }
   });
 
-  // Check if response is ok before trying to parse JSON
   if (!response.ok) {
-    // First check if the response is JSON before parsing
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
       const data = await response.json();
       errors.value = data.errors ? data.errors.map(err => Object.values(err).join(' ')) : ['Server returned an error'];
     } else {
-      // If not JSON, handle as text or HTML error
       const errorText = await response.text();
       errors.value = [`Server error (${response.status}): Not a valid JSON response`];
       console.error("Server returned non-JSON response:", errorText);
@@ -98,39 +95,14 @@ const saveMovie = async () => {
     return;
   }
 
-  // Only try to parse JSON for successful responses
-  const data = await response.json();
-  message.value = data.message;
-  errors.value = [];
-} catch (error) {
-  console.error("Request failed:", error);
-  errors.value = ['An error occurred while submitting the form.'];
-  message.value = '';
-}
-
-//   try {
-//     const response = await fetch("/api/v1/movies", {
-//       method: 'POST',
-//       body: form_data,
-//       headers: {
-//         'X-CSRFToken': csrf_token.value
-//       }
-//     });
-
-//     const data = await response.json();
-
-//     if (response.ok) {
-//       message.value = data.message; // "Movie Successfully added"
-//       errors.value = []; // Reset errors
-//     } else {
-//       errors.value = data.errors.map(err => Object.values(err).join(' '));
-//       message.value = ''; // Reset success message
-//     }
-//   } catch (error) {
-//     console.log(error);
-//     errors.value = ['An error occurred while submitting the form.'];
-//     message.value = ''; // Reset success message
-//   }
+    const data = await response.json();
+    message.value = data.message;
+    errors.value = [];
+  } catch (error) {
+    console.error("Request failed:", error);
+    errors.value = ['An error occurred while submitting the form.'];
+    message.value = '';
+  }
 };
 </script>
 

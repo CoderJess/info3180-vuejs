@@ -13,8 +13,6 @@ from werkzeug.utils import secure_filename
 from app.models import Movie
 from app.forms import MovieForm
 
-app = Flask(__name__)
-
 UPLOAD_FOLDER = os.path.join(app.root_path, '..', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -82,7 +80,7 @@ def get_movies():
     # Return the movie list in JSON format
     return jsonify(movies_list)
 
-@app.route('/api/v1/posters/<filename>', methods=['GET'])
+@app.route('/api/v1/posters/<path:filename>', methods=['GET'])
 def get_poster(filename):
     try:
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
